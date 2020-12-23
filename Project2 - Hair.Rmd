@@ -1,0 +1,259 @@
+---
+title: "Project 2 - Factor Hair"
+author: "Samrat Mallik"
+date: "8/2/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+3.Exploratory Data Analysis
+3.1.Environment Setup and Data Import
+3.1.1.Installing Necessary Packages and Invoking LIbraries
+
+```{r}
+library(ggplot2)
+library(ggcorrplot)
+library(ellipse)
+library(RColorBrewer)
+library(nFactors)
+library(psych)
+library(lattice)
+```
+3.1.2.Setting Up Working Directory
+```{r}
+setwd("C:/Users/Sam/Documents/R/Directories")
+getwd()
+```
+3.1.3.Importing and Reading the Dataset
+```{r}
+data = read.csv("Factor-Hair-Revised.csv")
+View(data)
+data = data[,-1]
+View(data)
+```
+Since the first column is simply the index for the number of rows we remove it for ease of operation.
+
+
+3.2.Variable Identification
+```{r}
+dim(data)
+summary(data)
+str(data)
+names(data)
+head(data,10)
+```
+Inferences: The dataset contains 100 rows and 12 columns. All the columns contain numeric data. The columns are named "ProdQual", "Ecom", "TechSup", "CompRes", "Advertising", "ProdLine", "SalesFImage", "ComPricing", "WartyClaim", "OrdBilling", "DelSpeed" and "Satisfaction" respectively. Here the last column "Satisfaction" is the dependant variable and the remaining are the independant variables. The numeric values in the dataset range from 1.3 - 10.
+
+3.3.Univariate Analysis
+
+We try to get a better understanding of the dataset by implementing some graphs/charts for easy visualisation of the data.
+```{r}
+attach(data)
+hist(Satisfaction, density = 20, col = "black", xlim = range(4:10), plot = TRUE, main = "Distribution of Satisfaction per No. of Customers",
+      xlab = "Satisfaction Level",
+      ylab = "No. of Observations")
+```
+Inferences: We conduct univariate analysis on the dependant variable "Satisfaction". We can deduce from the histogram that the overall customer satisfaction ratings range from 4.7 to 9.9. Largest number of observations lie in between 6.1 to 7.9 and very few observations are recorded above the 9 mark.
+
+3.4.Bivariate Analysis
+```{r}
+densityplot(~Satisfaction|data[1:11], ylab = "Density Distribution Plot for each Variable", type = "percent")
+```
+Inferences: The density plot gives us the kernel density estimates of Satisfcation. Here the 11 independant variables are treated as functions of "Satisfcation" and corresponding estimates are given by the plot. We see that "Ecom","OrdBilling" and "DelSpeed" have a narrower distribution compared to the other variables signifying lower variations.
+
+3.5.Missing Value Identification
+```{r}
+
+sum(is.na(data))
+
+```
+Inferences: There are no missing values in the dataset.
+
+3.6.Outlier Identification
+```{r}
+boxplot(data[1:12], col = "grey", main = "Identification of Outliers in each Variable",
+        xlab = "Variables",
+        ylab = "Range")
+
+```
+Infernces: The boxplot gives us a clear image of all possible outliers in the dataset. We can infer that "Ecom" has 4 outliers, "SalesFImage" has 2 outliers, "OrdBilling" has 3 outliers and "DelSpeed" has 1 outlier.
+
+3.7.Checking for Multicollinearity
+```{r}
+corr.matrix = round(cor(data),3)
+corr.matrix
+
+ggcorrplot(corr.matrix, type = "lower", ggtheme = ggplot2::theme_gray, show.legend = TRUE, show.diag = TRUE, colors = c("cyan","white","sky blue"), lab = TRUE)
+
+my_colors <- brewer.pal(7, "Blues")
+my_colors = colorRampPalette(my_colors)(100)
+
+plotcorr(corr.matrix , col=my_colors[corr.matrix*50+50] , mar=c(1,1,1,1), )
+```
+Inferences: We extract the correlation matrix of the dataset. But, since the data is quite large, we fail to effeciently deduce any conclusions from it. So, we plot the correlation matrix for visualisation purpose. We notice a high correlation between "CompRes" and "OrdBilling"&"DelSpeed", "TechSup" and "WartyClaims", "Ecom" and "SalesFImage" and moderately high correlation between "CompRes" and "Satisfaction" and "ProdLine" and "DelSpeed". Hence, we can see that the dependant variable is not highly correlated with all the indepandant variables. Furthermore, some of the independant variables are highly correlated with one another. Hence, there is evidence suggesting multicollinearity.
+
+4.Statistical Data Analysis
+4.1.Simple Linear Regression
+We draw a few scatterplots to get a better understanding of the highly correlated variables.
+```{r}
+scatter1 = plot(CompRes,DelSpeed, col = "Red", abline(lm(DelSpeed~CompRes), col = "Blue"), main = "Scatter Plot of Complaint Resolution VS Delivery Speed",
+                xlab = "Complaint Resolution",
+                ylab = "Delivery Speed")
+scatter2 = plot(TechSup, WartyClaim, col = "Red", abline(lm(WartyClaim~TechSup), col = "Blue"), main = "Scatter Plot of Technical Support VS Warranty & Claims",
+                xlab = "Technical Support",
+                ylab = "Warranty & Claims")
+scatter3 = plot(Ecom, SalesFImage, col = "Red", abline(lm(SalesFImage~Ecom), col = "Blue"), main = "Scatter Plot of E-commerce VS Sales Force Image ",
+                xlab = "E-commerce",
+                ylab = "Sales Force Image")
+scatter4 = plot(CompRes, Satisfaction, col = "Red", abline(lm(Satisfaction~CompRes), col = "Blue"), main = "Scatter Plot of Complaint Resolution VS Satisfcation",
+                xlab = "Complaint Resolution",
+                ylab = "Satisfaction")
+```
+
+
+We perform simple linear regression of the dependant variable "Satisfcation" with all the independant variables.
+null Hypothesis(Ho) = all Betas are equal
+alternative Hypothesis(Ha) = atleast one alternative Beta exists.
+```{r}
+model1 = lm(Satisfaction~ProdQual)
+summary(model1)
+anova(model1)
+
+model2 = lm(Satisfaction~Ecom)
+summary(model2)
+anova(model2)
+
+model3 = lm(Satisfaction~TechSup)
+summary(model3)
+anova(model3)
+
+model4 = lm(Satisfaction~CompRes)
+summary(model4)
+anova(model4)
+
+model5 = lm(Satisfaction~Advertising)
+summary(model5)
+anova(model5)
+
+model6 = lm(Satisfaction~ProdLine)
+summary(model6)
+anova(model6)
+
+model7 = lm(Satisfaction~SalesFImage)
+summary(model7)
+anova(model7)
+
+model8 = lm(Satisfaction~ComPricing)
+summary(model8)
+anova(model8)
+
+model9 = lm(Satisfaction~WartyClaim)
+summary(model9)
+anova(model9)
+
+model10 = lm(Satisfaction~OrdBilling)
+summary(model10)
+anova(model10)
+
+model11 = lm(Satisfaction~DelSpeed)
+summary(model11)
+anova(model11)
+
+```
+Inferences: By performing simple linear regression we get the intercepts and slopess of each independant variable(X) with the dependant variable(Yhat), which we may substitute in the equation Yhat = Intercept + Slope(X). This gives us the amount of increase in Yhat for unit increase of X. e.g. In "model1", the equation is Yhat = 3.676 + 0.415(X). This means that Satisfaction increases by 0.415 times for unit increase in Product Quality. We can also get to know the significance level of the model from the P-value, which is in this case 2.901e-07 making it much smaller than 0.001 and denoting the model as highly signnficant and a Robust Model, and also from the Significance codes given by the stars"***" beside the table. Hence, in this case we reject the null Hypothesis(Ho) and accept the Alternative Hypothesis(Ha) that atleast one alternative Beta exists and there is a regression model in the population. The Multiple R-squared value(0.2365) Implies how much of the variation in Customer Satisfaction(in this case 23.65% of the variation) is explained by the independant variable(In this case Product Quality).
+
+
+4.2.Pincipal Component Analysis/ Factor Analysis
+Barlett Sphericity Test for possible dimensional reduction.
+```{r}
+print(cortest.bartlett(corr.matrix, nrow(data)))
+```
+Inferences: from the test we can see that the P-value(1.736073e-120) is very small and we can go ahead with dimensional reduction and principal component analysis.
+
+Eigen Value Calculation
+```{r}
+EV = eigen(corr.matrix)
+eigenvalues = EV$values 
+eigenvalues 
+
+plot(eigenvalues, type = "lines", xlab="Principal Components", ylab="Eigen Values", main = "Scree Plot") 
+
+```
+We Calculate the Eigen vales for the correlation matrix to determine the number of principal components. Following the Kaiser rule we select only components having value greater than "1" i.e. the first four components. We also draw a scree plot to determine the number of components using the Elbow rule. Here also we see the elbow bend at 4. Hence, we choose 4 factors. 
+```{r}
+PCA = principal(data, nfactors = length(data),rotate="none")
+PCA
+```
+We carry out the principal component analysis to check the loadings in each of the components, and the percentage of variation explained by the components. Here the first four components can explain 79% of the variation. 
+
+Kaiser-Meyer-Olkin (KMO) Test : For finding Measure of Sampling Adequacy 
+```{r}
+KMO(corr.matrix)
+```
+Infernces: Overall Sample Adequacy is 66% hence 
+
+We do Principal Component Analysis with 4 components.
+```{r}
+pca1 = principal(data, nfactors = 4, rotate = "none")
+pca1
+fa.diagram(pca1, simple = FALSE) 
+```
+Infereneces: Here we see the factor loadings and that 79.2 % of the variation can be explained by the 4 components. We see in the diagram all the variables that go into the components.
+
+We perform Factor Analysis with 4 factors.
+```{r}
+fa1 = fa(data, nfactors = 4, rotate = "none", fm = "pa")
+fa1
+fa.diagram(fa1, simple = FALSE) 
+```
+Inferences: Here we see the factor loadings and that 71 % of the variation can be explained by the 4 components. We see the factors in the diagram. We may name them "Customer Service", "Online Marketing and Sales", "Grievence Redressal" and "Product Quality".
+
+4.3.Multiple Linear Regression
+null Hypothesis(Ho) = all Betas are equal
+alternative Hypothesis(Ha) = atleast one alternative Beta exists.
+```{r}
+fadata= data.frame(fa1$scores)
+attach(fadata)
+
+MLM = lm(Satisfaction~PA1+PA2+PA3+PA4)
+summary(MLM)
+anova(MLM)
+```
+Inferences: By performing multiple linear regression we get the intercepts and slopes of the independant variables(PA1,PA2,PA3,PA4) with the dependant variable(Satisfaction), which we may substitute in the equation Yhat = Intercept + Slope1(X1) + Slope2(X2) + ..... In "MLM", the equation is Satisfaction = 6.918 + 1.00957(PA1) + (-0.04392)PA2 + (-0.06618)PA3 + 0.56700(PA4). This means that Satisfaction increases by 1.00957 times for unit increase in Customer Service(PA1). We can also get to know the significance level of the model from the P-value, which is in this case < 2.2e-16 making it much smaller than 0.001 and denoting the model as highly significant and a Robust Model. Hence, in this case we reject the null Hypothesis(Ho) and accept the Alternative Hypothesis(Ha) that atleast one alternative Beta exists. Also from the Significance codes given by the stars"***" beside the table we can see that only Customer Service and Product Quality are shown as highly significant.  The co-efficient of Determination(R-squared) in this case the Adjusted R-squared value tells us that 86.55% of the variation in Satisfaction is explained by the model.
+
+We test the confidence interval of the model.
+```{r}
+confint(MLM)
+```
+Hence we can say that the intercept will lie between 6.831 and 7.004 with 97.5 % confidence. Similarly for the independant variables.
+
+We use the backtracking ability to determine the robustness of the model and analyze the goodness of fit.
+```{r}
+testdata = data.frame(PA1 = 0.1, PA2 = 0.12, PA3 = 0.06, PA4 = 0.08)
+
+Prediction = predict(MLM, testdata)
+
+Prediction = predict(MLM, testdata, interval = "confidence")
+Prediction
+
+Predicted = predict(MLM)
+Actual = Satisfaction
+
+
+Backtrack = data.frame(Actual, Predicted)
+Backtrack
+
+```
+We can see a table with the actual and predicted values of Satisfaction.
+
+To visualise this properly we use a chart.
+```{r}
+plot(Actual, col = "Red")
+plot(Predicted, col = "Blue")
+lines(Actual, col = "Red")
+lines(Predicted, col = "Blue")
+
+```
+We can conclude that the model is a good fit and the predicted values are very close to the actual values.
